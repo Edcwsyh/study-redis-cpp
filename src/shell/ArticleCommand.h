@@ -19,5 +19,7 @@ void command_all_article( std::vector<std::string>& commands );
 void command_vote( std::vector<std::string>& commands );
 // 热榜
 void command_top( std::vector<std::string>& commands );
+// 获取文章列表--按时间先后排序
+void command_top_time( std::vector<std::string>& commands );
 
 #endif

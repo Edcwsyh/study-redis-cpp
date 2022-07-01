@@ -60,9 +60,26 @@ void command_top( std::vector<std::string>& commands ) {
             std::cerr << "command error , please use 'help " << commands.front() << "'" << std::endl;
             return;
     }
-    auto oArticleList = Edc::VoteMgr::instance().get_all_article();
-    for ( auto riter = oArticleList.rbegin(); riter != oArticleList.rend() && ullShowNum; ++riter, --ullShowNum ) 
-    {
-        std::cout << *riter << std::endl;
+    auto oArticleList = Edc::VoteMgr::instance().get_article_top_score( ullShowNum );
+    for ( auto &oArticle : oArticleList ) {
+        std::cout << oArticle << std::endl;
+    }
+}
+
+void command_top_time( std::vector<std::string>& commands ) {
+    uint64_t ullShowNum = DEFATILT_TOP_NUM;
+    switch ( commands.size() ) {
+        case 2 : 
+            ullShowNum = std::strtoull( commands[1].c_str(), nullptr, 10 );
+            break;
+        case 1 : 
+            break;
+        default :
+            std::cerr << "command error , please use 'help " << commands.front() << "'" << std::endl;
+            return;
+    }
+    auto oArticleList = Edc::VoteMgr::instance().get_article_top_time( ullShowNum );
+    for ( auto &oArticle : oArticleList ) {
+        std::cout << oArticle << std::endl;
     }
 }

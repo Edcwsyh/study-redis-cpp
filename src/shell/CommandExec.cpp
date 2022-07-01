@@ -52,7 +52,9 @@ void CommandExec::register_all_commands() {
     // 投票
     register_cmd( "vote", "Usage : vote [username] [article id]\n\tVote on an article", command_vote );
     // 热榜
-    register_cmd( "top", "Usage : top [number(default = 10)]\n\tDisplays the top [number] articles with the highest votes", command_top );
+    register_cmd( "topscore", "Usage : topsocre [number(default = 10)]\n\tDisplays the top [number] articles with the highest votes", command_top );
+    // 按时间排序
+    register_cmd( "toptime", "Usage : toptime [number(default = 10)]\n\tDisplays the top [number] articles with the create time", command_top_time );
 }
 
 

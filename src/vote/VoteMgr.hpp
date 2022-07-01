@@ -27,9 +27,10 @@ public:
 public:
 protected:
     constexpr static std::string_view TABLE_ARTICLE = "article_entry"; // 文章实体表
-    constexpr static std::string_view TABLE_SCORE = "article_socre";
-    constexpr static std::string_view TABLE_USER = "article_user_";
-    constexpr static std::string_view KEY_ARTICLE_ID = "article_id";
+    constexpr static std::string_view TABLE_SCORE = "article_socre"; // 得分表
+    constexpr static std::string_view TABLE_TIME = "article_time"; // 时间表
+    constexpr static std::string_view TABLE_USER = "article_user_"; // 用户表
+    constexpr static std::string_view KEY_ARTICLE_ID = "article_id"; // 文章ID
     constexpr static uint64_t DEFAULT_ARTICLE_ID = 1000;
 
     // 投票相关
@@ -51,6 +52,8 @@ private:
     friend Singleton;
 
     std::string get_article_user_table( const Article& oArticle );
+
+    std::unordered_map<std::string, std::string> get_article_entry_map();
 public:
     explicit VoteMgr( const VoteMgr& ) = delete;
     explicit VoteMgr( VoteMgr&& ) = delete;
@@ -66,6 +69,12 @@ public:
     
     // 获取所有的文章对象
     std::vector<Article> get_all_article();
+
+    // 获取热榜
+    std::vector<Article> get_article_top_score( uint64_t ullNum );
+
+    // 获取按照最早时间排序的文章 
+    std::vector<Article> get_article_top_time( uint64_t ullNum );
 
     // 获取文章对象
     std::unique_ptr<Article> get_article_by_id( std::string_view sArticleID );
