@@ -1,0 +1,23 @@
+syntax="proto3";
+
+package Edc;
+
+message ArticleData {
+    // 创建时间
+    uint64 createTime = 1;
+    // 文章标题
+    string title = 2;
+    // 文章内容
+    string content = 3;
+    // 作者
+    string autor = 4;
+}
+
+message Article {
+    // 文章ID
+    uint64 articleID = 1;
+    // 文章分数
+    uint64 score = 2;
+    // 文章数据
+    ArticleData articleData = 3;
+}
