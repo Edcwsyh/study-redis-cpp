@@ -37,13 +37,14 @@ void command_all_article( std::vector<std::string>& commands ) {
 
 // 投票
 void command_vote( std::vector<std::string>& commands ) {
-    if ( commands.size() != 3 ) {
+    if ( commands.size() != 4 ) {
         std::cerr << "command error , please use 'help " << commands.front() << "'" << std::endl;
         return;
     }
     std::string_view sUsername = commands[1];
     std::string_view sArticle = commands[2];
-    Edc::VoteMgr::instance().vote( sArticle, sUsername );
+    std::string_view sVoteType = commands[3];
+    Edc::VoteMgr::instance().vote( sArticle, sUsername, sVoteType );
 }
 
 #define DEFATILT_TOP_NUM 10 //默认热榜数量

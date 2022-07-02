@@ -21,6 +21,12 @@
 
 namespace Edc {
 
+std::unordered_map<std::string_view, VoteMgr::VoteType> VoteMgr::s_VoteTyepMap = {
+    { "agree", ENM_VOTE_ARGEE }, 
+    { "against", ENM_VOTE_AGAINST }, 
+    { "autor", ENM_VOTE_AUTOR }, 
+};
+
 VoteMgr::VoteMgr() : m_oRedis( "tcp://127.0.0.1:6379" ) {
     auto oRes = m_oRedis.get( KEY_ARTICLE_ID );
     if ( !oRes.has_value() ) {
@@ -38,7 +44,7 @@ int VoteMgr::add_article( const Article& oArticle ) {
     std::string oUserTable( TABLE_USER );
     oUserTable += sArticleID;
     // 将作者加入投票列表
-    m_oRedis.sadd( oUserTable, oArticle.articledata().autor() );
+    m_oRedis.hset( oUserTable, oArticle.articledata().autor(), "autor" );
     // 设置过期时间
     m_oRedis.expire( oUserTable, VOTE_LIMIT );
     m_oRedis.zadd( TABLE_SCORE, sArticleID, oArticle.score(), sw::redis::UpdateType::NOT_EXIST);
@@ -129,31 +135,85 @@ std::unique_ptr<Article> VoteMgr::get_article_by_id( std::string_view sArticleID
     return std::move( pArticle );
 }
 
+// 获取投票类型 
+VoteMgr::VoteType VoteMgr::get_vote_type( std::string_view sVoteType ) {
+    auto pTaget = s_VoteTyepMap.find( sVoteType );
+    if ( pTaget == s_VoteTyepMap.end() ) {
+        return ENM_VOTE_UNKNOW;
+    }
+    return pTaget->second;
+}
+
 // 投票
-int VoteMgr::vote( std::string_view sArticleID, std::string_view sUsername ) {
-    std::string oUserTable( TABLE_USER );
-    oUserTable += sArticleID;
+int VoteMgr::vote( std::string_view sArticleID, std::string_view sUsername, std::string_view sVoteType ) {
+    std::string sUserTable( TABLE_USER );
+    sUserTable += sArticleID;
+
+    // 判断投票类型
+    int64_t illScore = 0;
+    VoteType enmVoteType = ENM_VOTE_UNKNOW;
+    switch ( ( enmVoteType = get_vote_type( sVoteType ) ) ) {
+        case ENM_VOTE_UNKNOW : 
+        case ENM_VOTE_AUTOR : 
+            std::cerr << "Unknow vote type" << std::endl;
+            return -1;
+        case ENM_VOTE_ARGEE : 
+            illScore = VOTE_SCORE;
+            break;
+        case ENM_VOTE_AGAINST : 
+            illScore = -VOTE_SCORE;
+            break;
+    }
+
+    // 判断文章是否存在
     auto pArticle = get_article_by_id( sArticleID );
     if ( !pArticle ) {
         std::cerr << "Article does not exist id : " << sArticleID << std::endl;
         return -1;
     }
+    // 判断时间
     if ( pArticle->articledata().createtime() + VOTE_LIMIT < time( nullptr ) ) {
         std::cerr << "The article is out of date, article id : " << pArticle->articleid() << std::endl;
         return -1;
     }
-    if ( m_oRedis.sismember( oUserTable, sUsername ) ) {
-        std::cerr << "User " << sUsername << "has already voted for Article " << sArticleID << std::endl;
-        return -1;
+
+    // 判断是否已经投票
+    auto oHRes = m_oRedis.hget( sUserTable, sUsername );
+    if ( oHRes.has_value() ) {
+        switch ( get_vote_type( oHRes.value() ) ) {
+            case ENM_VOTE_AUTOR : 
+                std::cerr << "You can't vote for your own work" << std::endl;
+                return -1;
+            case ENM_VOTE_UNKNOW : 
+                std::cerr << "System exception" << std::endl;
+                return -1;
+            case ENM_VOTE_ARGEE : 
+                if ( ENM_VOTE_ARGEE == enmVoteType ) {
+                    std::cerr << "The user has already voted, user : " << sUsername << 
+                                 " article : " << sArticleID << std::endl;
+                    return -1;
+                }
+                break;
+            case ENM_VOTE_AGAINST : 
+                if ( ENM_VOTE_AGAINST == enmVoteType ) {
+                    std::cerr << "The user has already voted, user : " << sUsername << 
+                                 " article : " << sArticleID << std::endl;
+                    return -1;
+                }
+                break;
+        }
+        // 走到这里表明变更投票, 分数应该翻倍(对冲之前投票的分数)
+        illScore *= 2;
     }
-    pArticle->set_score( pArticle->score() + VOTE_SCORE );
+
+    pArticle->set_score( pArticle->score() + illScore );
     // 同步到实体列表
     m_oRedis.hset( TABLE_ARTICLE, sArticleID, pArticle->SerializeAsString() );
     // 更新分数
-    m_oRedis.zincrby( TABLE_SCORE, VOTE_SCORE, sArticleID );
+    m_oRedis.zincrby( TABLE_SCORE, illScore, sArticleID );
     //m_oRedis.zadd( TABLE_SCORE, sArticleID, pArticle->score(), sw::redis::UpdateType::EXIST );
     // 加入投票列表
-    m_oRedis.sadd( oUserTable, sUsername );
+    m_oRedis.hset( sUserTable, sUsername, sVoteType );
     return 0;
 }
 

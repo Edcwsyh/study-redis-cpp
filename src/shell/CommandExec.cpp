@@ -50,7 +50,7 @@ void CommandExec::register_all_commands() {
     // 查询所有文章
     register_cmd( "allarticle", "Usage : allarticle\n\tGet a list of all articles (sorted by vote)", command_all_article );
     // 投票
-    register_cmd( "vote", "Usage : vote [username] [article id]\n\tVote on an article", command_vote );
+    register_cmd( "vote", "Usage : vote [username] [article id] [vote type]\n\tVote on an article\n\tvote type : agree or against", command_vote );
     // 热榜
     register_cmd( "topscore", "Usage : topsocre [number(default = 10)]\n\tDisplays the top [number] articles with the highest votes", command_top );
     // 按时间排序

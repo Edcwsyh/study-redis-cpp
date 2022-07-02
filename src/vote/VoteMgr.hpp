@@ -8,10 +8,10 @@
 #ifndef __VOTEMGR_EDC__
 #define __VOTEMGR_EDC__
 
+#include <cstdint>
 #include <memory>
 #include <string_view>
 #include <sw/redis++/redis++.h>
-#include <sw/redis++/redis.h>
 #include <unordered_map>
 #include <vector>
 #include "base/Singleton.hpp"
@@ -22,6 +22,14 @@ namespace Edc {
 class VoteMgr : public Singleton<VoteMgr> {
 //Type
 public:
+    enum VoteType {
+        ENM_VOTE_UNKNOW = 0, 
+        ENM_VOTE_AUTOR, 
+        ENM_VOTE_ARGEE = 100, // 赞同
+        ENM_VOTE_AGAINST,  // 反对
+    };
+
+    static std::unordered_map<std::string_view, VoteType> s_VoteTyepMap;
     
 //Constant
 public:
@@ -36,7 +44,7 @@ protected:
     // 投票相关
     constexpr static uint32_t REDUCE_CYCLE = 1000; //衰减周期
     constexpr static uint32_t REDUCE_SOCRE = 20; //衰减分数
-    constexpr static uint32_t VOTE_SCORE = 100; //投票分数
+    constexpr static int64_t VOTE_SCORE = 100; //投票分数
     constexpr static uint32_t VOTE_LIMIT = 12000; //投票周期限制(创建时间超过该值无法投票)
     
 //Member Variables
@@ -79,11 +87,14 @@ public:
     // 获取文章对象
     std::unique_ptr<Article> get_article_by_id( std::string_view sArticleID );
 
+    // 获取投票类型 
+    VoteType get_vote_type( std::string_view sVoteType );
+
     // 投票
-    int vote( std::string_view sArticleID, std::string_view username );
+    int vote( std::string_view sArticleID, std::string_view username, std::string_view sVoteType );
+
 //Static Member Function
 public:
-    
 };
 
 }
