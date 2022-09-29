@@ -12,6 +12,7 @@
 #include <string_view>
 #include <vector>
 #include <functional>
+#include "tree/PrefixTree.hpp"
 
 namespace Edc {
 
@@ -27,6 +28,8 @@ protected:
             std::string m_sDoc;
             func_t m_oFunc;
         public : 
+            CommandEntry() = default;
+            CommandEntry( const CommandEntry& ) = default;
             CommandEntry( std::string_view sDoc, func_t&& func ) : m_sDoc( sDoc ), m_oFunc( std::move( func ) ) {  };
             
             const std::string& get_doc() const noexcept { return m_sDoc; }
@@ -39,7 +42,8 @@ protected:
     
 //Member Variables
 protected:
-    std::unordered_map<std::string, CommandEntry> m_CommandMap;
+    typedef PrefixTree<char, CommandEntry, 64, 'z'> CommandMap;
+    CommandMap m_CommandMap;
     
 //Static Member Variables
 protected:
@@ -48,10 +52,11 @@ protected:
 protected: 
     std::vector<std::string> parsing_command( const std::string& oInput );
     CommandEntry* get_command_entry( const std::string& command ) {
-        if ( auto pTarget = m_CommandMap.find( command ); pTarget != m_CommandMap.end() ) {
-            return &pTarget->second;
+        CommandMap::Node* pNode = m_CommandMap.find( command );
+        if ( !pNode ) {
+            return nullptr;
         }
-        return nullptr;
+        return &pNode->get_val();
     }
 public:
     BaseCommandExec() = default;
@@ -65,9 +70,13 @@ public:
     virtual void exec( const std::string& oInput ) = 0;
     // 注册所有命令
     virtual void register_all_commands() = 0;
+    // 命令补全
+    virtual const std::vector<std::string> match_command(const std::string& prefix) noexcept {
+        return m_CommandMap.match_all( prefix );
+    }
 
     // 注册一条命令
-    int register_cmd( std::string_view sCommand, std::string_view sDoc, CommandEntry::func_t&& func );
+    int register_cmd( const std::string& sCommand, std::string_view sDoc, CommandEntry::func_t&& func );
 
 //Static Member Function
 public:

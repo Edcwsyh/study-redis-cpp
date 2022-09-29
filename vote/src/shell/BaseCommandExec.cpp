@@ -18,13 +18,12 @@ std::vector<std::string> BaseCommandExec::parsing_command( const std::string& oI
 }
 
 
-int BaseCommandExec::register_cmd( std::string_view sCommand, std::string_view sDoc, 
+int BaseCommandExec::register_cmd( const std::string& sCommand, std::string_view sDoc, 
     CommandEntry::func_t&& func ) 
 {
-    auto oInsertRes = 
-        m_CommandMap.insert( std::make_pair( sCommand, CommandEntry( sDoc, std::move( func ) ) ) );
-    if ( !oInsertRes.second ) {
-        std::cerr << "Command conflict : " << sCommand << std::endl;
+    int iRetCode = m_CommandMap.insert( sCommand, CommandEntry( sDoc, std::move(func ) ) );
+    if ( iRetCode ) {
+        std::cerr << "Command conflict : " << sCommand << "ret code : " << iRetCode << std::endl;
         return -1;
     }
     return 0;

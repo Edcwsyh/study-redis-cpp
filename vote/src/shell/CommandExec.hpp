@@ -36,7 +36,7 @@ protected:
     
 //Member Function
 public:
-    CommandExec() = default;
+    CommandExec();
     explicit CommandExec( const CommandExec& ) = delete;
     explicit CommandExec( CommandExec&& ) = delete;
     ~CommandExec() = default;
@@ -47,7 +47,8 @@ public:
 
     virtual void register_all_commands() override;
 
-    const std::vector<std::string_view> get_all_command();
+    const std::vector<std::string> get_all_command();
+
 //Static Member Function
 public:
     static void command_exit( const std::vector<std::string>& commands );

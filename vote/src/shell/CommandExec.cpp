@@ -16,25 +16,33 @@
 
 namespace Edc {
 
+CommandExec::CommandExec() {
+    CommandMap::Associater& oAssociater = m_CommandMap.get_associater();
+    uint32_t uID = 0;
+    for ( char c = 'a'; c <= 'z'; ++c ) {
+        oAssociater.associate( c, uID++ );
+    }
+    for ( char c = 'A'; c <= 'Z'; ++c ) {
+        oAssociater.associate( c, uID++ );
+    }
+    oAssociater.associate( '_', uID++ );
+}
+
 void CommandExec::exec( const std::string& oInput ) {
     auto commands = parsing_command( oInput );
     if ( oInput.size() == 0 ) {
         std::cerr << "The commands is empty!" << std::endl;
         return;
     }
-    if ( auto pTaget = m_CommandMap.find( commands.front() ); pTaget != m_CommandMap.end() ) {
-        pTaget->second.get_func()( commands );
+    if ( auto pTaget = m_CommandMap.find( commands.front() ); pTaget != nullptr ) {
+        pTaget->get_val().get_func()( commands );
     } else {
         std::cerr << "Unknow command, you can use 'help'command view help document" << std::endl;
     }
 }
 
-const std::vector<std::string_view> CommandExec::get_all_command() {
-    std::vector<std::string_view> oRes;
-    for ( auto& [ command, _ ] : m_CommandMap ) {
-        oRes.push_back( command );
-    }
-    return oRes;
+const std::vector<std::string> CommandExec::get_all_command() {
+    return m_CommandMap.match_all("");
 }
 
 void CommandExec::register_all_commands() {
